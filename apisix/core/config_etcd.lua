@@ -397,24 +397,22 @@ local function http_waitdir(self, etcd_cli, key, modified_index, timeout)
         end
 
         -- ignore res with revision smaller then self.prev_index
-        if tonumber(res.result.header.revision) > self.prev_index then
-            local res2
-            for _, evt in ipairs(res.result.events) do
-                if core_str.find(evt.kv.key, key) == 1 then
-                    if not res2 then
-                        res2 = tablex.deepcopy(res)
-                        table.clear(res2.result.events)
-                    end
-                    insert_tab(res2.result.events, evt)
+        local res2
+        for _, evt in ipairs(res.result.events) do
+            if core_str.find(evt.kv.key, key) == 1 then
+                if not res2 then
+                    res2 = tablex.deepcopy(res)
+                    table.clear(res2.result.events)
                 end
+                insert_tab(res2.result.events, evt)
             end
+        end
 
-            if res2 then
-                if log_level >= NGX_INFO then
-                    log.info("http_waitdir: ", inspect(res2))
-                end
-                return res2
+        if res2 then
+            if log_level >= NGX_INFO then
+                log.info("http_waitdir: ", inspect(res2))
             end
+            return res2
         end
     end
 
